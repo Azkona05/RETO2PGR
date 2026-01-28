@@ -13,6 +13,7 @@ public class Cliente extends Persona {
 	private static double cuota = 30.0;
 	private LocalDate fechaDeAlta;
 	
+	
 	public Cliente(String dni) {
 		super(dni);
 	}
