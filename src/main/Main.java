@@ -90,7 +90,7 @@ public class Main {
 			for (Persona persona : listaPersonas) {
 				if (persona.getDni().equalsIgnoreCase(dni)) {
 					Cliente cliente = (Cliente) persona;
-					cliente.getActividadesC().put(a.getCodigo(), a);
+					cliente.getActividadesC().put(a.getCod(), a);
 					break;
 				}
 			}
