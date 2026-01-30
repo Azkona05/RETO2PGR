@@ -1,6 +1,7 @@
 package clases;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import utilidades.Util;
 
@@ -11,8 +12,10 @@ public class Trabajador extends Persona{
 	 */
 	private static final long serialVersionUID = 1L;
 	private Puesto puesto;
+	private double salario;
 	private String tipoContrato;
 	private LocalDate fechaContratacion;
+	private Map<String, Actividad> actividadesT;
 	
 	public Trabajador(String dni, String nombre, String apellido, String email, String telefono,
 			LocalDate fechaNacimiento, Puesto puesto, String tipoContrato, LocalDate fechaContratacion) {
@@ -28,6 +31,13 @@ public class Trabajador extends Persona{
 
 	public Puesto getPuesto() {
 		return puesto;
+	}
+	public double getSalario() {
+		return salario;
+	}
+
+	public void setSalario(double salario) {
+		this.salario = salario;
 	}
 
 	public void setPuesto(Puesto puesto) {
@@ -65,5 +75,9 @@ public class Trabajador extends Persona{
 		}
 		this.tipoContrato = Util.introducirCadena("Tipo de contrato del trabajador: ");
 		this.fechaContratacion = Util.pidoFechaDMA("Fecha de contratacion del trabajador ");
+	}
+	
+	public double calcularDinero() {
+		return 14.12;
 	}
 }

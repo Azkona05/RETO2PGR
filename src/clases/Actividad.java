@@ -2,6 +2,7 @@ package clases;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.TreeMap;
 
 import utilidades.Util;
 
@@ -14,6 +15,8 @@ public class Actividad implements Serializable {
 	private String nombre;
 	private double precio;
 	private LocalDate fecha;
+	private TreeMap<String, Persona> integrantesActividad;
+	
 
 	public Actividad() {
 		super();

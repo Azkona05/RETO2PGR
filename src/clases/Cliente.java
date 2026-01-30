@@ -1,6 +1,8 @@
 package clases;
 
 import java.time.LocalDate;
+import java.util.Iterator;
+import java.util.Map;
 
 import utilidades.Util;
 
@@ -12,7 +14,7 @@ public class Cliente extends Persona {
 	private static final long serialVersionUID = 1L;
 	private static double cuota = 30.0;
 	private LocalDate fechaDeAlta;
-	
+	private Map<String, Actividad> actividadesC;
 	
 	public Cliente(String dni) {
 		super(dni);
@@ -21,7 +23,7 @@ public class Cliente extends Persona {
 	public Cliente(String dni, String nombre, String apellido, String email, String telefono, LocalDate fechaNacimiento,
 			LocalDate fechaDeAlta) {
 		super(dni, nombre, apellido, email, telefono, fechaNacimiento);
-		this.fechaDeAlta = fechaDeAlta;
+		this.fechaDeAlta = LocalDate.now();
 	}
 	public LocalDate getFechaDeAlta() {
 		return fechaDeAlta;
@@ -40,7 +42,24 @@ public class Cliente extends Persona {
 
 	public void setDatos(String dni) {
 		super.setDatos(dni);
-		this.fechaDeAlta = Util.pidoFechaDMA("Fecha de alta ");
+	}
+	
+	public double calcularDinero() {
+		double cuotaTotal;
+		Cliente c;
+		double actCuotaTotal = 0;
+		Iterator<Map.Entry<String, Actividad>> it = actividadesC.entrySet().iterator();
+		while(it.hasNext()) {
+			Map.Entry<String, Actividad> entry = it.next();
+			String key = entry.getKey();
+			Actividad a = entry.getValue();
+			actCuotaTotal =+ a.getPrecio();
+			System.out.println(key + "->" +a);
+		}
+		
+		
+		
+		return actCuotaTotal + this.cuota;
 	}
 	
 }
