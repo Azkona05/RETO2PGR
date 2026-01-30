@@ -27,7 +27,6 @@ public class Main {
 		File fichSal = new File("salas.obj");
 
 		cargarSalas(fichSal);
-		cargarActividades(fichAct);
 
 		int opc = 0;
 		do {
