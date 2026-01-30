@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import clases.Actividad;
 import clases.Cliente;
 import clases.Persona;
 import clases.Sala;
@@ -26,6 +27,7 @@ public class Main {
 		File fichSal = new File("salas.obj");
 
 		cargarSalas(fichSal);
+		cargarActividades(fichAct);
 
 		int opc = 0;
 		do {
@@ -39,6 +41,7 @@ public class Main {
 				altaActividad(fichAct);
 				break;
 			case 3:
+				inscripcionActividad(fichPer, fichAct);
 				break;
 			case 4:
 				break;
@@ -64,11 +67,45 @@ public class Main {
 
 	}
 
+	private static void inscripcionActividad(File fichPer, File fichAct) {
+		String dni = Util.introducirCadena("Introduce el dni de la persona a inscribir: ");
+		Persona p = obtenerPersona(fichPer, dni);
+		if (p == null) {
+			System.out.println("No existe ninguna persona con ese dni.");
+		} else {
+			System.out.println("Persona encontrada: " + p.getNombre());
+		}
+		String codAct = Util.introducirCadena("Introduce el codigo de la actividad: ");
+		Actividad a = obtenerActividad(fichAct, codAct);
+		if (a == null) {
+			System.out.println("No existe ninguna actividad con ese codigo.");
+		} else {
+			System.out.println("Actividad encontrada: " + a.getNombre());
+		}
+		boolean inscrito = Util.leerRespuesta(
+				"Quieres inscribir a " + p.getNombre() + " en la actividad " + a.getNombre() + "? (S/N)");
+		if (inscrito == true) {
+			List<Persona> listaPersonas = new ArrayList<>();
+			cargarListaDeFich(fichPer, listaPersonas);
+			for (Persona persona : listaPersonas) {
+				if (persona.getDni().equalsIgnoreCase(dni)) {
+					Cliente cliente = (Cliente) persona;
+					cliente.getActividadesC().put(a.getCodigo(), a);
+					break;
+				}
+			}
+			cargarFicheroConArray(listaPersonas, fichPer);
+			System.out.println("Actividad añadida al mapa del cliente correctamente.");
+
+		} else {
+			System.out.println("Inscripción cancelada.");
+		}
+	}
+
 	private static void altaActividad(File fichAct) {
-		
+
 		String cod = Util.introducirCadena("Introduce el codigo de la actividad");
-		
-		
+
 	}
 
 	private static void altaPersona(File fichPer) {
@@ -99,43 +136,26 @@ public class Main {
 						p = new Trabajador(dni);
 						p.setDatos(dni);
 						oos.writeObject(p);
-
 					}
-					
 				}
-
 				mas = Util.leerInt("Quieres añadir una persona mas? (1=Si/2=No)");
-
 			} while (mas == 1);
-
 		} catch (FileNotFoundException e) {
-
 			e.printStackTrace();
-
 		} catch (IOException e) {
-
 			e.printStackTrace();
-
 		} catch (Exception e) {
-
 			e.printStackTrace();
-
 		} finally {
-
 			try {
-
 				oos.close();
-
 			} catch (IOException e) {
-
 				e.printStackTrace();
-
 			}
 		}
 	}
 
 	private static void cargarListaDeFich(File ficheroEq, List<Persona> personas) {
-
 		ObjectInputStream ois = null;
 		Persona emp;
 		try {
@@ -177,57 +197,59 @@ public class Main {
 	}
 
 	private static Persona obtenerPersona(File fEmpleados, String dni) {
-
 		ObjectInputStream ois = null;
-
 		Persona emp;
-
 		try {
-
 			ois = new ObjectInputStream(new FileInputStream(fEmpleados));
-
 			while (true) {
-
 				emp = (Persona) ois.readObject();
-
 				if (emp.getDni().equalsIgnoreCase(dni)) {
-
 					return emp;
-
 				}
-
 			}
-
 		} catch (EOFException e) {
-
 		} catch (FileNotFoundException e) {
-
 			e.printStackTrace();
-
 		} catch (IOException e) {
-
 			e.printStackTrace();
-
 		} catch (ClassNotFoundException e) {
-
 			e.printStackTrace();
-
 		} finally {
-
 			try {
-
 				ois.close();
-
 			} catch (IOException e) {
-
 				e.printStackTrace();
-
 			}
-
 		}
-
 		return null;
+	}
 
+	private static Actividad obtenerActividad(File fichAct, String codAct) {
+		ObjectInputStream ois = null;
+		Actividad act;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(fichAct));
+			while (true) {
+				act = (Actividad) ois.readObject();
+				if (act.getCodigo().equalsIgnoreCase(codAct)) {
+					return act;
+				}
+			}
+		} catch (EOFException e) {
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				ois.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 
 	private static void cargarSalas(File fichSal) {
@@ -273,6 +295,5 @@ public class Main {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 }
