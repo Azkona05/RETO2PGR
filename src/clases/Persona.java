@@ -96,5 +96,7 @@ public abstract class Persona implements Serializable {
 		this.telefono = Util.introducirCadena("Telefono: ");
 		this.fechaNacimiento = Util.pidoFechaDMA("Fecha de nacimiento ");
 	}
+	
+	public abstract double calcularDinero();
 
 }

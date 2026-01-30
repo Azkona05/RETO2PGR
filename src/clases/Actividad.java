@@ -2,6 +2,7 @@ package clases;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.TreeMap;
 
 import utilidades.Util;
 
@@ -11,9 +12,11 @@ public class Actividad implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	private String codigo;
 	private String nombre;
 	private double precio;
 	private LocalDate fecha;
+	private TreeMap<String, Persona> integrantesActividad;
 
 	public Actividad() {
 		super();
@@ -49,11 +52,19 @@ public class Actividad implements Serializable {
 	public void setFecha(LocalDate fecha) {
 		this.fecha = fecha;
 	}
-	
+
+	public String getCodigo() {
+		return codigo;
+	}
+
+	public void setCodigo(String codigo) {
+		this.codigo = codigo;
+	}
+
 	public String toString() {
 		return "Actividad [nombre=" + nombre + ", precio=" + precio + ", fecha=" + fecha + "]";
 	}
-	
+
 	public void setDatos() {
 		this.nombre = Util.introducirCadena("Introduce el nombre de la actividad: ");
 		this.precio = Util.leerFloat("Introduce el precio de la actividad: ");

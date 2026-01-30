@@ -14,7 +14,6 @@ import java.util.Scanner;
 
 import exception.ValidarDniException;
 import exception.ValidarEmailException;
-import exception.ValidarOrigenVuelo;
 
 //import exception.ValidarDniException;
 //import exception.ValidarEmailException;
@@ -308,16 +307,5 @@ public class Util {
 				'L', 'C', 'K', 'E', 'T' };
 		int indice = numero % 23;
 		return letras[indice];
-	}
-
-	public static String validarOrigen(String mensaje) throws ValidarOrigenVuelo {
-		String origen;
-
-		origen = Util.introducirCadena("Introduce el origen:");
-
-		if (!origen.matches(("[a-zA-Z]{5,10}"))) {
-			throw new ValidarOrigenVuelo("Error: El origen debe tener entre 5 y 10 caracteres.");
-		}
-		return origen;
 	}
 }
