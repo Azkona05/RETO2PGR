@@ -90,7 +90,7 @@ public class Main {
 			for (Persona persona : listaPersonas) {
 				if (persona.getDni().equalsIgnoreCase(dni)) {
 					Cliente cliente = (Cliente) persona;
-					cliente.getActividadesC().put(a.getCodigo(), a);
+					cliente.getActividadesC().put(a.getCod(), a);
 					break;
 				}
 			}
@@ -310,7 +310,7 @@ public class Main {
 			ois = new ObjectInputStream(new FileInputStream(fichAct));
 			while (true) {
 				act = (Actividad) ois.readObject();
-				if (act.getCodigo().equalsIgnoreCase(codAct)) {
+				if (act.getCod().equalsIgnoreCase(codAct)) {
 					return act;
 				}
 			}
