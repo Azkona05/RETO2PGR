@@ -310,7 +310,7 @@ public class Main {
 			ois = new ObjectInputStream(new FileInputStream(fichAct));
 			while (true) {
 				act = (Actividad) ois.readObject();
-				if (act.getCodigo().equalsIgnoreCase(codAct)) {
+				if (act.getCod().equalsIgnoreCase(codAct)) {
 					return act;
 				}
 			}
