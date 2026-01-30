@@ -8,9 +8,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import clases.Actividad;
 import clases.Cliente;
 import clases.Persona;
 import clases.Sala;
@@ -66,9 +68,87 @@ public class Main {
 
 	private static void altaActividad(File fichAct) {
 		
-		String cod = Util.introducirCadena("Introduce el codigo de la actividad");
+		ArrayList<Actividad> actividades = new ArrayList<>();
+		deFicheroAArrayList(fichAct, actividades);
 		
+		int rep;
+		boolean repetir = false;
+		do {
+			String nom = Util.introducirCadena("Introduce el nombre de la actividad:");
+			String codBuscar = nom.substring(0,3);
+			String cod = gencod(codBuscar, actividades);
+			double prec = Util.leerFloat("Introduce el precio de la actividad");
+			LocalDate fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad");
+			
+			Actividad a = new Actividad(cod,nom,prec,fecha);
+			actividades.add(a);			
+			
+			rep = Util.leerInt("¿Introducir una nueva actividad (1) SI / (2) NO)?");
+			if (rep == 1) {
+				repetir = true;
+			}
+		}while(repetir);
 		
+		if (fichAct.exists()) {
+			try (AñadirObjetoSinCabecera introAct = new AñadirObjetoSinCabecera(new FileOutputStream(fichAct))){
+				while(true) {
+					introAct.writeObject(actividades);
+				}
+			} catch(Exception e) {
+				e.getMessage();
+			}
+		} else {
+			try (ObjectOutputStream introAct = new ObjectOutputStream(new FileOutputStream(fichAct))){
+				while(true) {
+					introAct.writeObject(actividades);
+				}
+			}catch(Exception e) {
+			
+			}
+		}
+	}
+	
+	private static String gencod(String codBuscar, ArrayList<Actividad> actividades) {
+		String codAux = codBuscar.substring(0,3);
+		String aux;
+		int temp = 0;
+		int numMax = 0;
+		for (Actividad a:actividades)
+			if(a.getCod().substring(0,3).equalsIgnoreCase(codAux)) {
+				aux = a.getCod().substring(a.getCod().length()-2);
+				temp = Integer.parseInt(aux);
+				if (numMax < temp) {
+					numMax = temp;
+				}
+			} 
+		
+		numMax++;
+		String cod = codAux +"-"+ String.format("%02d", numMax);
+		return cod;
+	}
+	
+	private static void deFicheroAArrayList(File fichAct, ArrayList<Actividad> actividades) {
+		if(fichAct.exists()) {
+			ObjectInputStream leerFichero = null;
+			Actividad a;
+			try {
+				leerFichero = new ObjectInputStream(new FileInputStream(fichAct));
+				while(true) {
+					a =  (Actividad) leerFichero.readObject();
+					actividades.add(a);
+				}
+			}catch(EOFException e) {
+			}catch(Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					leerFichero.close();
+				}catch(IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
 	}
 
 	private static void altaPersona(File fichPer) {
