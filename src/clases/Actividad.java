@@ -12,7 +12,7 @@ public class Actividad implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String codigo;
+	private String cod;
 	private String nombre;
 	private double precio;
 	private LocalDate fecha;
@@ -22,20 +22,12 @@ public class Actividad implements Serializable {
 		super();
 	}
 
-	public Actividad(String codigo, String nombre, double precio, LocalDate fecha) {
+	public Actividad(String cod, String nombre, double precio, LocalDate fecha) {
 		super();
-		this.codigo = codigo;
+		this.cod = cod;
 		this.nombre = nombre;
 		this.precio = precio;
 		this.fecha = fecha;
-	}
-
-	public String getCodigo() {
-		return codigo;
-	}
-
-	public void setCodigo(String codigo) {
-		this.codigo = codigo;
 	}
 
 	public String getNombre() {
@@ -61,6 +53,14 @@ public class Actividad implements Serializable {
 	public void setFecha(LocalDate fecha) {
 		this.fecha = fecha;
 	}
+	
+	public String getCod() {
+		return cod;
+	}
+
+	public void setCod(String cod) {
+		this.cod = cod;
+	}
 
 	public String toString() {
 		return "Actividad [nombre=" + nombre + ", precio=" + precio + ", fecha=" + fecha + "]";
@@ -71,5 +71,4 @@ public class Actividad implements Serializable {
 		this.precio = Util.leerFloat("Introduce el precio de la actividad: ");
 		this.fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad ");
 	}
-
 }
