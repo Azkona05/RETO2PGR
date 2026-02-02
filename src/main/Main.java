@@ -44,12 +44,16 @@ public class Main {
 				inscripcionActividad(fichPer, fichAct);
 				break;
 			case 4:
+				listadoActividades(fichAct);
 				break;
 			case 5:
+				listadoAntiguedad(fichPer);
 				break;
 			case 6:
+				
 				break;
 			case 7:
+				estadisticas(fichAct, fichPer);
 				break;
 			case 8:
 				break;
@@ -65,6 +69,68 @@ public class Main {
 			}
 		} while (opc != 11);
 
+	}
+
+	private static void estadisticas(File fichAct, File fichPer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void listadoAntiguedad(File fichPer) {
+		List<Persona> personas = new ArrayList<>();
+		ArrayList<Trabajador> trabajadores = new ArrayList<>();
+		if (!fichPer.exists()) {
+			System.out.println("No has introducido ninguna persona");
+			return;
+		}
+		cargarListaDeFich(fichPer, personas);
+		for (Persona per : personas) {
+			if (per instanceof Trabajador) {
+				Trabajador t = (Trabajador) per;
+				trabajadores.add(t);
+			}
+		}
+		for (int i = 0; i < trabajadores.size(); i++) {
+			for (int j = 0; j < trabajadores.size() - 1; j++) {
+				if (trabajadores.get(j).getFechaContratacion().getYear() > trabajadores.get(j + 1)
+						.getFechaContratacion().getYear()) {
+					Trabajador temp = trabajadores.get(j);
+					trabajadores.set(j, trabajadores.get(j + 1));
+					trabajadores.set(j + 1, temp);
+				}
+			}
+		}
+		for (Trabajador t : trabajadores) {
+			System.out
+					.println("DNI:" + t.getDni() + "- " + t.getNombre() + "- " + t.getApellido() + "- " + t.toString());
+		}
+	}
+
+	private static void listadoActividades(File fichAct) {
+		LocalDate fechaInicio = Util.pidoFechaDMA("Introduce la fecha de Inicio (DD-MM-AAAA): ");
+		LocalDate fechaFin = Util.pidoFechaDMA("Introduce la fecha de Fin (DD-MM-AAAA): ");
+		if (!fichAct.exists()) {
+			System.out.println("Fichero no existente");
+			return;
+		}
+		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fichAct))) {
+			ArrayList<Actividad> actividades = (ArrayList<Actividad>) ois.readObject();
+			boolean hay = false;
+			for (Actividad a : actividades) {
+				LocalDate fechaAct = a.getFecha();
+
+				if (!fechaAct.isBefore(fechaInicio) && !fechaAct.isAfter(fechaFin)) {
+
+					System.out.println(a);
+					hay = true;
+				}
+			}
+			if (!hay) {
+				System.out.println("No hay actividades en ese rango de fechas.");
+			}
+		} catch (Exception e) {
+			System.out.println("Error de lectura: " + e.getMessage());
+		}
 	}
 
 	private static void inscripcionActividad(File fichPer, File fichAct) {
@@ -103,86 +169,86 @@ public class Main {
 	}
 
 	private static void altaActividad(File fichAct) {
-		
+
 		ArrayList<Actividad> actividades = new ArrayList<>();
 		deFicheroAArrayList(fichAct, actividades);
-		
+
 		int rep;
 		boolean repetir = false;
 		do {
 			String nom = Util.introducirCadena("Introduce el nombre de la actividad:");
-			String codBuscar = nom.substring(0,3);
+			String codBuscar = nom.substring(0, 3);
 			String cod = gencod(codBuscar, actividades);
 			double prec = Util.leerFloat("Introduce el precio de la actividad");
 			LocalDate fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad");
-			
-			Actividad a = new Actividad(cod,nom,prec,fecha);
-			actividades.add(a);			
-			
+
+			Actividad a = new Actividad(cod, nom, prec, fecha);
+			actividades.add(a);
+
 			rep = Util.leerInt("¿Introducir una nueva actividad (1) SI / (2) NO)?");
 			if (rep == 1) {
 				repetir = true;
 			}
-		}while(repetir);
-		
+		} while (repetir);
+
 		if (fichAct.exists()) {
-			try (AñadirObjetoSinCabecera introAct = new AñadirObjetoSinCabecera(new FileOutputStream(fichAct))){
-				while(true) {
+			try (AñadirObjetoSinCabecera introAct = new AñadirObjetoSinCabecera(new FileOutputStream(fichAct))) {
+				while (true) {
 					introAct.writeObject(actividades);
 				}
-			} catch(Exception e) {
+			} catch (Exception e) {
 				e.getMessage();
 			}
 		} else {
-			try (ObjectOutputStream introAct = new ObjectOutputStream(new FileOutputStream(fichAct))){
-				while(true) {
+			try (ObjectOutputStream introAct = new ObjectOutputStream(new FileOutputStream(fichAct))) {
+				while (true) {
 					introAct.writeObject(actividades);
 				}
-			}catch(Exception e) {
-			
+			} catch (Exception e) {
+
 			}
 		}
 	}
-	
+
 	private static String gencod(String codBuscar, ArrayList<Actividad> actividades) {
-		String codAux = codBuscar.substring(0,3);
+		String codAux = codBuscar.substring(0, 3);
 		String aux;
 		int temp = 0;
 		int numMax = 0;
-		for (Actividad a:actividades)
-			if(a.getCod().substring(0,3).equalsIgnoreCase(codAux)) {
-				aux = a.getCod().substring(a.getCod().length()-2);
+		for (Actividad a : actividades)
+			if (a.getCod().substring(0, 3).equalsIgnoreCase(codAux)) {
+				aux = a.getCod().substring(a.getCod().length() - 2);
 				temp = Integer.parseInt(aux);
 				if (numMax < temp) {
 					numMax = temp;
 				}
-			} 
-		
+			}
+
 		numMax++;
-		String cod = codAux +"-"+ String.format("%02d", numMax);
+		String cod = codAux + "-" + String.format("%02d", numMax);
 		return cod;
 	}
-	
+
 	private static void deFicheroAArrayList(File fichAct, ArrayList<Actividad> actividades) {
-		if(fichAct.exists()) {
+		if (fichAct.exists()) {
 			ObjectInputStream leerFichero = null;
 			Actividad a;
 			try {
 				leerFichero = new ObjectInputStream(new FileInputStream(fichAct));
-				while(true) {
-					a =  (Actividad) leerFichero.readObject();
+				while (true) {
+					a = (Actividad) leerFichero.readObject();
 					actividades.add(a);
 				}
-			}catch(EOFException e) {
-			}catch(Exception e) {
+			} catch (EOFException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				try {
 					leerFichero.close();
-				}catch(IOException e) {
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 	}
