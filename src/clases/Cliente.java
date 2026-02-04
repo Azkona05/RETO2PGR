@@ -64,7 +64,7 @@ public class Cliente extends Persona {
 			Map.Entry<String, Actividad> entry = it.next();
 			String key = entry.getKey();
 			Actividad a = entry.getValue();
-			actCuotaTotal = +a.getPrecio();
+			actCuotaTotal += a.getPrecio();
 			System.out.println(key + "->" + a);
 		}
 
