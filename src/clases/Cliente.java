@@ -1,10 +1,9 @@
 package clases;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import utilidades.Util;
 
 public class Cliente extends Persona {
 
@@ -14,10 +13,11 @@ public class Cliente extends Persona {
 	private static final long serialVersionUID = 1L;
 	private static double cuota = 30.0;
 	private LocalDate fechaDeAlta;
-	private Map<String, Actividad> actividadesC;
+	private Map<String, Actividad> actividadesC = new HashMap<>();
 
 	public Cliente(String dni) {
 		super(dni);
+		this.fechaDeAlta = LocalDate.now();
 	}
 
 	public Cliente(String dni, String nombre, String apellido, String email, String telefono, LocalDate fechaNacimiento,

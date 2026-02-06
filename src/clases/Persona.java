@@ -87,16 +87,21 @@ public abstract class Persona implements Serializable {
 		return "Persona [dni=" + dni + ", nombre=" + nombre + ", apellido=" + apellido + ", email=" + email
 				+ ", telefono=" + telefono + ", fechaNacimiento=" + fechaNacimiento + "]";
 	}
-	
+
 	public void setDatos(String dni) {
 		this.dni = dni;
 		this.nombre = Util.introducirCadena("Nombre: ");
 		this.apellido = Util.introducirCadena("Apellido: ");
 		this.email = Util.validarEmail("Email: ");
-		this.telefono = Util.introducirCadena("Telefono: ");
+		do {
+			this.telefono = Util.introducirCadena("Telefono: ");
+			if (telefono.length() < 9 || telefono.length() > 12) {
+				System.out.println("El telefono debe tener entre 9 y 12 digitos.");
+			}
+		} while (telefono.length() < 9 || telefono.length() > 12);
 		this.fechaNacimiento = Util.pidoFechaDMA("Fecha de nacimiento ");
 	}
-	
+
 	public abstract double calcularDinero();
 
 }

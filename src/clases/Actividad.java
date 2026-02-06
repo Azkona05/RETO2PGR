@@ -16,6 +16,7 @@ public class Actividad implements Serializable {
 	private String nombre;
 	private double precio;
 	private LocalDate fecha;
+	private int numeroIntegrantes;
 	private TreeMap<String, Persona> integrantesActividad;
 
 	public Actividad() {
@@ -53,13 +54,32 @@ public class Actividad implements Serializable {
 	public void setFecha(LocalDate fecha) {
 		this.fecha = fecha;
 	}
-	
+
 	public String getCod() {
 		return cod;
 	}
 
 	public void setCod(String cod) {
 		this.cod = cod;
+	}
+
+	public TreeMap<String, Persona> getIntegrantesActividad() {
+		return integrantesActividad;
+	}
+
+	public void setIntegrantesActividad(TreeMap<String, Persona> integrantesActividad) {
+		this.integrantesActividad = integrantesActividad;
+	}
+
+	public void setNumeroIntegrantes(int numeroIntegrantes) {
+		this.numeroIntegrantes = numeroIntegrantes;
+	}
+
+	public int getNumeroIntegrantes() {
+		if (integrantesActividad == null) {
+			return 0;
+		}
+		return integrantesActividad.size();
 	}
 
 	public String toString() {
