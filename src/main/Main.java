@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +19,6 @@ import clases.Actividad;
 import clases.Cliente;
 import clases.Persona;
 import clases.Puesto;
-import clases.Sala;
 import clases.Trabajador;
 import exception.ValidarDniException;
 import utilidades.AñadirObjetoSinCabecera;
@@ -29,11 +27,10 @@ import utilidades.Util;
 public class Main {
 
 	public static void main(String[] args) {
-		File fichPer = new File("personas.dat");
-		File fichAct = new File("actividades.dat");
-		File fichSal = new File("salas.txt");
+		File fichPer = new File("personas.obj");
+		File fichAct = new File("actividades.obj");
 
-		cargarSalas(fichSal);
+		crearDatosPrueba(fichPer, fichAct);
 
 		int opc = 0;
 		do {
@@ -82,160 +79,359 @@ public class Main {
 
 	}
 
+	private static void crearDatosPrueba(File fichPer, File fichAct) {
+		// 1. CREAR PERSONAS
+		List<Persona> listaPersonas = new ArrayList<>();
+
+		// Trabajador antiguo (Ana)
+		Trabajador t1 = new Trabajador("11111111H");
+		t1.setNombre("Ana");
+		t1.setApellido("García");
+		t1.setPuesto(Puesto.MONITOR);
+		t1.setTipoContrato("Indefinido");
+		t1.setFechaContratacion(LocalDate.of(2010, 1, 15));
+
+		// Trabajador nuevo (Luis)
+		Trabajador t2 = new Trabajador("22222222J");
+		t2.setNombre("Luis");
+		t2.setApellido("Rodríguez");
+		t2.setPuesto(Puesto.ENTRENADOR);
+		t2.setTipoContrato("Temporal");
+		t2.setFechaContratacion(LocalDate.of(2022, 11, 20));
+
+		// Clientes
+		Cliente c1 = new Cliente("33333333P");
+		c1.setNombre("Roberto");
+		c1.setApellido("Sanz");
+
+		Cliente c2 = new Cliente("44444444D");
+		c2.setNombre("Lucía");
+		c2.setApellido("Vila");
+
+		listaPersonas.add(t1);
+		listaPersonas.add(t2);
+		listaPersonas.add(c1);
+		listaPersonas.add(c2);
+
+		// 2. CREAR ACTIVIDADES
+		ArrayList<Actividad> listaActividades = new ArrayList<>();
+
+		// Actividad 1: Yoga (Precio 40.0)
+		Actividad act1 = new Actividad("YOG-01", "YOGA", 40.0, LocalDate.now().plusDays(2));
+		// IMPORTANTE: Inicializar el TreeMap de integrantes ya que en tu clase no se
+		// hace en el constructor
+		act1.setIntegrantesActividad(new java.util.TreeMap<>());
+
+		// Inscribir a Roberto y Lucía en Yoga
+		act1.getIntegrantesActividad().put(c1.getDni(), c1);
+		act1.getIntegrantesActividad().put(c2.getDni(), c2);
+
+		// Actualizar el mapa interno del cliente para calcularDinero()
+		c1.getActividadesC().put(act1.getCod(), act1);
+		c2.getActividadesC().put(act1.getCod(), act1);
+
+		// Actividad 2: Zumba (Precio 25.0)
+		Actividad act2 = new Actividad("ZUM-01", "ZUMBA", 25.0, LocalDate.now().plusDays(5));
+		act2.setIntegrantesActividad(new java.util.TreeMap<>());
+
+		// Inscribir solo a Lucía en Zumba
+		act2.getIntegrantesActividad().put(c2.getDni(), c2);
+		c2.getActividadesC().put(act2.getCod(), act2);
+
+		listaActividades.add(act1);
+		listaActividades.add(act2);
+
+		// 3. GUARDAR EN FICHEROS
+		try (ObjectOutputStream oosPer = new ObjectOutputStream(new FileOutputStream(fichPer));
+				ObjectOutputStream oosAct = new ObjectOutputStream(new FileOutputStream(fichAct))) {
+
+			for (Persona p : listaPersonas)
+				oosPer.writeObject(p);
+			for (Actividad a : listaActividades)
+				oosAct.writeObject(a);
+
+			System.out.println(">>> Datos de prueba cargados con éxito.");
+		} catch (IOException e) {
+			System.err.println("Error al escribir datos: " + e.getMessage());
+		}
+	}
+
 	private static void bajaPersona(File fichPer, File fichAct) {
 		String dni;
-		boolean personaEncontrada = false;
-		do {
-			try {
-				dni = Util.validarDni("Introduce el DNI del cliente a eliminar:");
-			} catch (ValidarDniException e) {
-				dni = null;
-				e.printStackTrace();
-			}
-		} while (dni == null);
+		try {
+			dni = Util.validarDni("Introduce el DNI de la persona a eliminar:");
+		} catch (ValidarDniException e) {
+			System.out.println(e.getMessage());
+			return;
+		}
 
-		try (ObjectInputStream leerFich = new ObjectInputStream(new FileInputStream(fichAct))) {
-			while (true) {
-				try {
-					Actividad a = (Actividad) leerFich.readObject();
-					if (a.getIntegrantesActividad() != null) {
-						Iterator<Map.Entry<String, Persona>> iterator = a.getIntegrantesActividad().entrySet()
-								.iterator();
-						while (iterator.hasNext()) {
-							Map.Entry<String, Persona> entry = iterator.next();
+		List<Persona> listaPersonas = new ArrayList<>();
+		cargarListaDeFich(fichPer, listaPersonas);
 
-							if (entry.getKey().equals(dni)) {
-								System.out.println("Persona encontrada: " + entry.getValue());
-								System.out.println("En la actividad: " + a.getNombre());
+		boolean eliminadoPer = listaPersonas.removeIf(p -> p.getDni().equalsIgnoreCase(dni));
 
-								iterator.remove();
-								personaEncontrada = true;
-								break;
-							}
-						}
-					}
-				} catch (EOFException eof) {
-					break;
+		if (eliminadoPer) {
+			cargarFicheroConArray(listaPersonas, fichPer);
+			System.out.println("Persona eliminada del registro general.");
+
+			ArrayList<Actividad> listaActividades = new ArrayList<>();
+			deFicheroAArrayList(fichAct, listaActividades);
+
+			for (Actividad act : listaActividades) {
+				if (act.getIntegrantesActividad() != null) {
+					act.getIntegrantesActividad().remove(dni);
 				}
 			}
-			if (personaEncontrada) {
-				System.out.println("Persona con DNI " + dni + " eliminada correctamente.");
-			} else {
-				System.out.println("No se encontró ninguna persona con DNI: " + dni);
+
+			try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fichAct))) {
+				for (Actividad act : listaActividades) {
+					oos.writeObject(act);
+				}
+			} catch (IOException e) {
+				System.err.println("Error al actualizar el fichero de actividades.");
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
+
+		} else {
+			System.out.println("No se encontró ninguna persona con DNI: " + dni);
 		}
 	}
 
 	private static void busquedaEspecial(File fichPer, File fichAct) {
+
+		Map<String, Actividad> actividadesC;
+
 		boolean encontrado = false;
+
 		ArrayList<Persona> personas = new ArrayList<>();
-		String cod = Util.introducirCadena("Introduce el codigo de la actividad");
+
+		ArrayList<Actividad> actividades = new ArrayList<>();
+
+		String cod = Util.introducirCadena("Introduce el codigo de la actividad").toUpperCase();
+
 		cargarListaDeFich(fichPer, personas);
-		for (int i = 0; i < personas.size(); i++) {
-			if (personas.get(i) instanceof Cliente) {
-				Cliente c = (Cliente) personas.get(i);
-				if (c.getActividadesC().containsValue(cod)) {
-					encontrado = true;
+
+		deFicheroAArrayList(fichAct, actividades);
+
+		boolean actividadExiste = false;
+
+		for (Actividad a : actividades) {
+
+			if (a.getCod().equalsIgnoreCase(cod)) {
+
+				actividadExiste = true;
+				break;
+			}
+		}
+		if (!actividadExiste) {
+			System.out.println("ERROR: No existe ninguna actividad con código: " + cod);
+			return;
+
+		}
+
+		for (Persona p : personas) {
+
+			if (p instanceof Cliente) {
+
+				Cliente c = (Cliente) p;
+
+				actividadesC = c.getActividadesC();
+
+				if (actividadesC == null) {
+
+					System.out.println("No hay nadie inscrito ");
+
+					return;
+
 				}
+
+				if (actividadesC.containsKey(cod)) {
+
+					encontrado = true;
+
+					System.out.println(c.toString());
+
+				}
+
 			}
 		}
 		if (!encontrado) {
 			System.out.println("No se ha encontrado ninguna actividad con ese codigo");
 			return;
-		} else {
-			for (Persona p : personas) {
-				if (p instanceof Cliente) {
-					Cliente c = (Cliente) p;
-					if (c.getActividadesC().containsValue(cod)) {
-						System.out.println(c);
-					}
-				}
-			}
 		}
 	}
 
 	private static void bajaActividad(File fichAct, File aux) {
+
 		if (!fichAct.exists()) {
+
 			System.out.println("No existe el fichero");
+
+			return;
+
 		}
+
+		boolean encontrado = false;
+
+		ArrayList<Actividad> actividades = new ArrayList<>();
+
+		deFicheroAArrayList(fichAct, actividades);
+
+		for (Actividad a : actividades) {
+
+			System.out.println("Nombre:" + a.getNombre() + " COD:" + a.getCod());
+
+		}
+
 		if (aux.exists()) {
+
 			aux.delete();
+
 		}
+
 		String cod = Util.introducirCadena("Introduce el codigo de la  actividad");
-		try (ObjectInputStream personaIStream = new ObjectInputStream(new FileInputStream(fichAct))) {
+
+		for (Actividad a : actividades) {
+
+			if (a.getCod().equals(cod)) {
+
+				encontrado = true;
+
+			}
+
+		}
+
+		if (!encontrado) {
+
+			System.out.println("No se encontro esa actividad");
+
+			return;
+
+		}
+
+		try (ObjectInputStream actividadIStream = new ObjectInputStream(new FileInputStream(fichAct))) {
+
 			try {
+
 				while (true) {
-					Persona persona = (Persona) personaIStream.readObject();
-					if (persona instanceof Cliente) {
-						Cliente c = (Cliente) persona;
-						Map<String, Actividad> activity = c.getActividadesC();
-						Iterator<Map.Entry<String, Actividad>> it = activity.entrySet().iterator();
-						while (it.hasNext()) {
-							Map.Entry<String, Actividad> entry = it.next();
-							String key = entry.getKey();
-							Actividad t = entry.getValue();
-							if (!t.getCod().equals(cod)) {
-								boolean auxVacio = !aux.exists() || aux.length() == 0;
-								if (auxVacio) {
-									try (ObjectOutputStream auxOStream = new ObjectOutputStream(
-											new FileOutputStream(aux))) {
 
-										auxOStream.writeObject(activity);
+					Actividad a = (Actividad) actividadIStream.readObject();
 
-									} catch (Exception exception) {
-										System.out.println("Error en la escritura del fichero actividad.dat");
-									}
-								} else {
-									try (AñadirObjetoSinCabecera auxIStream = new AñadirObjetoSinCabecera(
-											new FileOutputStream(aux, true))) {
+					if (!a.getCod().equals(cod)) {
 
-										auxIStream.writeObject(activity);
+						boolean auxVacio = !aux.exists() || aux.length() == 0;
 
-									} catch (IOException e) {
-										e.printStackTrace();
-										System.out.println("Error de escritura: " + e.getMessage());
+						if (auxVacio) {
 
-									}
-								}
+							try (ObjectOutputStream auxOStream = new ObjectOutputStream(new FileOutputStream(aux))) {
+
+								auxOStream.writeObject(a);
+
+							} catch (Exception exception) {
+
+								System.out.println("Error en la escritura del fichero actividad.dat");
+
 							}
+
+						} else {
+
+							try (AñadirObjetoSinCabecera auxIStream = new AñadirObjetoSinCabecera(
+
+									new FileOutputStream(aux, true))) {
+
+								auxIStream.writeObject(a);
+
+							} catch (IOException e) {
+
+								e.printStackTrace();
+
+								System.out.println("Error de escritura: " + e.getMessage());
+
+							}
+
 						}
+
 					}
+
 				}
+
 			} catch (EOFException exception) {
+
 			}
+
 		} catch (Exception exception) {
+
 			System.out.println("Error de lectura de fichero producto.dat");
+
 			exception.printStackTrace();
+
 		}
-		File dat = new File("actividades.dat");
-		File backup = new File("actividades.backup");
-		File auxx = aux;
-		if (dat.renameTo(backup)) {
-			if (!auxx.renameTo(dat)) {
-				System.out.println("Error: no se pudo renombrar aux como dat, se intenta renombrar backup como dat");
-				if (!backup.renameTo(dat)) {
-					System.out.println("Error: no se pudo renombrar backup como dat");
-				}
+
+		if (aux.length() == 0) {
+
+			System.out.println("Se eliminó la ÚLTIMA actividad. Borrando archivo completo...");
+
+			if (fichAct.delete()) {
+
+				System.out.println("Archivo 'actividades.dat' eliminado completamente");
+
 			} else {
-				try {
-					Files.deleteIfExists(Paths.get("actividades.backup"));
-					System.out.println("Fichero borrado");
-				} catch (IOException e) {
-					System.out.println("Error al borrar el fichero de backup: " + e.getMessage());
-				}
+
+				System.out.println("Error: No se pudo eliminar el archivo original");
+
 			}
+
+			aux.delete();
+
+			return;
+
+		}
+
+		File dat = new File("actividades.dat");
+
+		File backup = new File("actividades.backup");
+
+		File auxx = aux;
+
+		if (dat.renameTo(backup)) {
+
+			if (!auxx.renameTo(dat)) {
+
+				System.out.println("Error: no se pudo renombrar aux como dat, se intenta renombrar backup como dat");
+
+				if (!backup.renameTo(dat)) {
+
+					System.out.println("Error: no se pudo renombrar backup como dat");
+
+				}
+
+			} else {
+
+				try {
+
+					Files.deleteIfExists(Paths.get("actividades.backup"));
+
+					System.out.println("Fichero borrado");
+
+				} catch (IOException e) {
+
+					System.out.println("Error al borrar el fichero de backup: " + e.getMessage());
+
+				}
+
+			}
+
 		} else {
+
 			System.out.println("Error: no se pudo crear el backup");
+
 		}
+
 		if (backup.exists()) {
+
 			backup.delete();
+
 		}
+
 	}
 
 	private static void modificacion(File fichPer, File fichAct) {
@@ -353,30 +549,52 @@ public class Main {
 			System.out.println("Faltan ficheros para calcular estadísticas.");
 			return;
 		}
+
 		ArrayList<Cliente> clientes = new ArrayList<>();
-		ArrayList<Actividad> actividades = new ArrayList<>();
+		Map<String, Actividad> mapaActividades = new java.util.HashMap<>();
+
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fichPer))) {
 			while (true) {
-				Persona p = (Persona) ois.readObject();
-				if (p instanceof Cliente c) {
-					clientes.add(c);
+				try {
+					Persona p = (Persona) ois.readObject();
+					if (p instanceof Cliente c) {
+						clientes.add(c);
+					}
+				} catch (EOFException e) {
+					break;
 				}
 			}
-		} catch (EOFException e) {
 		} catch (Exception e) {
-			e.getMessage();
-			return;
+			System.err.println("Error leyendo personas: " + e.getMessage());
 		}
+
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fichAct))) {
 			while (true) {
-				Actividad a = (Actividad) ois.readObject();
-				actividades.add(a);
+				try {
+					Actividad a = (Actividad) ois.readObject();
+					mapaActividades.put(a.getCod(), a);
+				} catch (EOFException e) {
+					break;
+				}
 			}
-		} catch (EOFException e) {
 		} catch (Exception e) {
-			e.getMessage();
-			return;
+			System.err.println("Error leyendo actividades: " + e.getMessage());
 		}
+
+		System.out.println("\n---------- INFORME DE ESTADÍSTICAS ----------");
+
+		if (mapaActividades.isEmpty()) {
+			System.out.println("No hay actividades registradas.");
+		} else {
+			System.out.println("LISTADO DE ACTIVIDADES DISPONIBLES:");
+			System.out.println("--------------------------------------------");
+			for (Actividad a : mapaActividades.values()) {
+				System.out.printf("- [%s] %-10s | Precio: %.2f€ | Inscritos: %d\n", a.getCod(), a.getNombre(),
+						a.getPrecio(), a.getNumeroIntegrantes());
+			}
+			System.out.println("--------------------------------------------");
+		}
+
 		if (clientes.isEmpty()) {
 			System.out.println("No hay clientes registrados.");
 		} else {
@@ -384,24 +602,25 @@ public class Main {
 			for (Cliente c : clientes) {
 				sumaCuotas += c.calcularDinero();
 			}
-			System.out.printf("Cuota media de los clientes: %.2f €%n", sumaCuotas / clientes.size());
+			System.out.printf("CUOTA MEDIA POR CLIENTE: %.2f €\n", sumaCuotas / clientes.size());
 		}
-		if (actividades.isEmpty()) {
-			System.out.println("No hay actividades registradas.");
-			return;
-		}
-		int max = 0;
-		for (Actividad a : actividades) {
-			if (a.getNumeroIntegrantes() > max) {
-				max = a.getNumeroIntegrantes();
+
+		if (!mapaActividades.isEmpty()) {
+			int max = 0;
+			for (Actividad a : mapaActividades.values()) {
+				if (a.getNumeroIntegrantes() > max) {
+					max = a.getNumeroIntegrantes();
+				}
+			}
+
+			System.out.println("ACTIVIDAD(ES) CON MÁS CLIENTES (" + max + "):");
+			for (Actividad a : mapaActividades.values()) {
+				if (a.getNumeroIntegrantes() == max) {
+					System.out.println("   -> " + a.getNombre() + " (" + a.getCod() + ")");
+				}
 			}
 		}
-		System.out.println("Actividades con más clientes (" + max + "):");
-		for (Actividad a : actividades) {
-			if (a.getNumeroIntegrantes() == max) {
-				System.out.println(a);
-			}
-		}
+		System.out.println("--------------------------------------------\n");
 	}
 
 	private static void listadoAntiguedad(File fichPer) {
@@ -472,110 +691,126 @@ public class Main {
 		Persona p = obtenerPersona(fichPer, dni);
 		if (p == null) {
 			System.out.println("No existe ninguna persona con ese dni.");
-		} else {
-			System.out.println("Persona encontrada: " + p.getNombre());
-		}
-		if (!(p instanceof Cliente)) {
-			System.out.println("Error: Esta persona es un Trabajador y no puede inscribirse en actividades.");
 			return;
 		}
-		String codAct = Util.introducirCadena("Introduce el codigo de la actividad: ");
+		if (!(p instanceof Cliente)) {
+			System.out.println("Error: Esta persona es un Trabajador y no tiene historial de inscripciones.");
+			return;
+		}
+		Cliente clienteActual = (Cliente) p;
+		System.out.println("Persona encontrada: " + clienteActual.getNombre());
+		if (clienteActual.getActividadesC().isEmpty()) {
+			System.out.println("El cliente no está inscrito en ninguna actividad actualmente.");
+		} else {
+			System.out.println("Actividades actuales del cliente:");
+			for (Actividad act : clienteActual.getActividadesC().values()) {
+				System.out.println("- [" + act.getCod() + "] " + act.getNombre());
+			}
+		}
+		System.out.println("--------------------------------------");
+		String codAct = Util.introducirCadena("Introduce el código de la actividad a inscribir: ").toUpperCase();
 		Actividad a = obtenerActividad(fichAct, codAct);
 		if (a == null) {
-			System.out.println("No existe ninguna actividad con ese codigo.");
-		} else {
-			System.out.println("Actividad encontrada: " + a.getNombre());
+			System.out.println("No existe ninguna actividad con ese código.");
+			return;
 		}
-		boolean inscrito = Util.leerRespuesta(
-				"Quieres inscribir a " + p.getNombre() + " en la actividad " + a.getNombre() + "? (S/N)");
-		if (inscrito == true) {
+		boolean inscrito = Util.leerRespuesta("¿Inscribir en " + a.getNombre() + "? (S/N)");
+		if (inscrito) {
 			List<Persona> listaPersonas = new ArrayList<>();
 			cargarListaDeFich(fichPer, listaPersonas);
 			for (Persona persona : listaPersonas) {
 				if (persona.getDni().equalsIgnoreCase(dni)) {
-					Cliente cliente = (Cliente) persona;
-					cliente.getActividadesC().put(a.getCod(), a);
+					Cliente c = (Cliente) persona;
+					c.getActividadesC().put(a.getCod(), a);
 					break;
 				}
 			}
+			ArrayList<Actividad> actividadesExistentes = new ArrayList<>();
+			deFicheroAArrayList(fichAct, actividadesExistentes);
+			for (Actividad actividad : actividadesExistentes)
+				if (actividad.getCod().equalsIgnoreCase(codAct)) {
+					actividad.getIntegrantesActividad().put(codAct, clienteActual);
+					break;
+				}
+			cargarFicheroConArray1(actividadesExistentes, fichAct);
 			cargarFicheroConArray(listaPersonas, fichPer);
-			System.out.println("Actividad añadida al mapa del cliente correctamente.");
+			System.out.println("Inscripción realizada con éxito.");
+		}
 
-		} else {
-			System.out.println("Inscripción cancelada.");
+	}
+
+	private static void cargarFicheroConArray1(ArrayList<Actividad> actividadesExistentes, File fichAct) {
+
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream(new FileOutputStream(fichAct));
+			for (Actividad a : actividadesExistentes) {
+				oos.writeObject(a);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (oos != null)
+					oos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	private static void altaActividad(File fichAct, File fichPer) {
+		ArrayList<Actividad> actividadesExistentes = new ArrayList<>();
+		deFicheroAArrayList(fichAct, actividadesExistentes);
 
-		ArrayList<Actividad> actividades = new ArrayList<>();
-		deFicheroAArrayList(fichAct, actividades);
-
-		boolean hayMonitorOEntrenador = verificarMonitoresDisponibles(fichPer);
-
-		if (!hayMonitorOEntrenador) {
-			System.out.println("No se tiene guardado ningun monitor ni entrenador");
+		if (!verificarMonitoresDisponibles(fichPer)) {
+			System.out.println("No se tiene guardado ningun monitor ni entrenador.");
 			return;
 		}
 
-		boolean seguir = false;
+		ArrayList<Actividad> nuevasActividades = new ArrayList<>();
 		int rep;
 		do {
-			String nom = Util.introducirCadena("Introduce el nombre de la actividad:");
+			String nom;
+			do {
+				nom = Util.introducirCadena("Introduce el nombre de la actividad:");
+				if (nom.length() < 4) {
+					System.out.println("El nombre tiene que tener 4 letras como minimo.");
+				}
+			} while (nom.length() < 4);
 
-			String codBuscar = nom.substring(0, 3);
-			String cod = gencod(codBuscar, actividades);
+			ArrayList<Actividad> todas = new ArrayList<>(actividadesExistentes);
+			todas.addAll(nuevasActividades);
 
-			double prec = Util.leerFloat("Introduce el precio de la actividad");
-			LocalDate fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad");
+			String cod = gencod(nom.substring(0, 3), todas);
+			double prec = Util.leerFloat("Introduce el precio:");
+
+			LocalDate fecha;
+			do {
+				fecha = Util.pidoFechaDMA("Introduce la fecha:");
+				if (fecha.isBefore(LocalDate.now())) {
+					System.out.println("La fecha no puede ser anterior a hoy.");
+				}
+			} while (fecha.isBefore(LocalDate.now()));
 
 			Actividad a = new Actividad(cod, nom, prec, fecha);
-			actividades.add(a);
+			a.setIntegrantesActividad(new java.util.TreeMap<>());
+			nuevasActividades.add(a);
 
-			rep = Util.leerInt("¿Introducir una nueva actividad (1) SI / (2) NO)?");
-			seguir = (rep == 1);
+			rep = Util.leerInt("¿Introducir otra actividad? (1) SI / (2) NO");
+		} while (rep == 1);
 
-		} while (seguir);
+		boolean existe = fichAct.exists();
+		try (ObjectOutputStream oos = existe ? new AñadirObjetoSinCabecera(new FileOutputStream(fichAct, true))
+				: new ObjectOutputStream(new FileOutputStream(fichAct))) {
 
-		do {
-			String nom = Util.introducirCadena("Introduce el nombre de la actividad:");
-			String codBuscar = nom.substring(0, 3);
-			String cod = gencod(codBuscar, actividades);
-			double prec = Util.leerFloat("Introduce el precio de la actividad");
-			LocalDate fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad");
-
-			Actividad a = new Actividad(cod, nom, prec, fecha);
-			actividades.add(a);
-
-			rep = Util.leerInt("¿Introducir una nueva actividad (1) SI / (2) NO)?");
-			if (rep == 1) {
-				seguir = true;
-			} else {
-				seguir = false;
-				break;
+			for (Actividad act : nuevasActividades) {
+				oos.writeObject(act);
 			}
-		} while (seguir);
-
-		if (fichAct.exists()) {
-			try (AñadirObjetoSinCabecera introAct = new AñadirObjetoSinCabecera(new FileOutputStream(fichAct, true))) {
-				for (Actividad act : actividades) {
-					introAct.writeObject(act);
-				}
-				System.out.println(actividades.size() + " actividad(es) añadida(s) correctamente.");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} else {
-			try (ObjectOutputStream introAct = new ObjectOutputStream(new FileOutputStream(fichAct))) {
-				for (Actividad act : actividades) {
-					introAct.writeObject(act);
-				}
-				System.out.println(actividades.size() + " actividad(es) añadida(s) correctamente.");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			System.out.println("Actividades guardadas.");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
 	}
 
 	private static boolean verificarMonitoresDisponibles(File fichPer) {
@@ -701,6 +936,7 @@ public class Main {
 	}
 
 	private static void cargarListaDeFich(File fichPer, List<Persona> personas) {
+		personas.clear();
 		ObjectInputStream ois = null;
 		Persona p;
 		try {
@@ -797,48 +1033,4 @@ public class Main {
 		return null;
 	}
 
-	private static void cargarSalas(File fichSal) {
-		ArrayList<Sala> salas = new ArrayList<>();
-
-		Sala s;
-		try (ObjectOutputStream datosSalas = new ObjectOutputStream(new FileOutputStream(fichSal));) {
-			s = new Sala("FITNESS1", 30);
-			salas.add(s);
-			s = new Sala("FITNESS2", 20);
-			salas.add(s);
-			s = new Sala("PISCINA1", 25);
-			salas.add(s);
-			s = new Sala("PISCINA2", 25);
-			salas.add(s);
-			s = new Sala("PISTA1", 2);
-			salas.add(s);
-			s = new Sala("PISTA2", 4);
-			salas.add(s);
-			s = new Sala("ZONA1", 40);
-			salas.add(s);
-			s = new Sala("FISIO1", 2);
-			salas.add(s);
-			s = new Sala("FISIO2", 2);
-			salas.add(s);
-			s = new Sala("PISTA1", 25);
-			salas.add(s);
-			s = new Sala("CANCHA1", 50);
-			salas.add(s);
-			s = new Sala("CANCHA2", 50);
-			salas.add(s);
-			s = new Sala("VESTUARIOM", 35);
-			salas.add(s);
-			s = new Sala("VESTUARIOF", 35);
-			salas.add(s);
-			s = new Sala("FRONTON", 10);
-			salas.add(s);
-			s = new Sala("PABELLON", 35);
-			salas.add(s);
-
-			datosSalas.writeObject(salas);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 }
