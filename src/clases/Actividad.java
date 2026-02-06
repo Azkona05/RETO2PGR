@@ -1,0 +1,94 @@
+package clases;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.TreeMap;
+
+import utilidades.Util;
+
+public class Actividad implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String cod;
+	private String nombre;
+	private double precio;
+	private LocalDate fecha;
+	private int numeroIntegrantes;
+	private TreeMap<String, Persona> integrantesActividad;
+
+	public Actividad() {
+		super();
+	}
+
+	public Actividad(String cod, String nombre, double precio, LocalDate fecha) {
+		super();
+		this.cod = cod;
+		this.nombre = nombre;
+		this.precio = precio;
+		this.fecha = fecha;
+	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public double getPrecio() {
+		return precio;
+	}
+
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
+
+	public LocalDate getFecha() {
+		return fecha;
+	}
+
+	public void setFecha(LocalDate fecha) {
+		this.fecha = fecha;
+	}
+
+	public String getCod() {
+		return cod;
+	}
+
+	public void setCod(String cod) {
+		this.cod = cod;
+	}
+
+	public TreeMap<String, Persona> getIntegrantesActividad() {
+		return integrantesActividad;
+	}
+
+	public void setIntegrantesActividad(TreeMap<String, Persona> integrantesActividad) {
+		this.integrantesActividad = integrantesActividad;
+	}
+
+	public void setNumeroIntegrantes(int numeroIntegrantes) {
+		this.numeroIntegrantes = numeroIntegrantes;
+	}
+
+	public int getNumeroIntegrantes() {
+		if (integrantesActividad == null) {
+			return 0;
+		}
+		return integrantesActividad.size();
+	}
+
+	public String toString() {
+		return "Actividad [nombre=" + nombre + ", precio=" + precio + ", fecha=" + fecha + "]";
+	}
+
+	public void setDatos() {
+		this.nombre = Util.introducirCadena("Introduce el nombre de la actividad: ");
+		this.precio = Util.leerFloat("Introduce el precio de la actividad: ");
+		this.fecha = Util.pidoFechaDMA("Introduce la fecha de la actividad ");
+	}
+}
