@@ -89,6 +89,7 @@ public abstract class Persona implements Serializable {
 	}
 
 	public void setDatos(String dni) {
+		boolean rep = false;
 		this.dni = dni;
 		this.nombre = Util.introducirCadena("Nombre: ");
 		this.apellido = Util.introducirCadena("Apellido: ");
@@ -100,6 +101,14 @@ public abstract class Persona implements Serializable {
 			}
 		} while (telefono.length() < 9 || telefono.length() > 12);
 		this.fechaNacimiento = Util.pidoFechaDMA("Fecha de nacimiento ");
+		do {
+			if (fechaNacimiento.isAfter(LocalDate.now())) {
+				System.out.println("La fecha de nacimiento no puede ser mayor que la fecha del dia de hoy.");
+				rep = true;
+			} else {
+				rep = false;
+			}
+		} while (rep);
 	}
 
 	public abstract double calcularDinero();
